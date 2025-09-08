@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Карта старих доріг Львівщина</title>
+  <title>Карта старих доріг — Львівщина</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
   <style>
@@ -19,62 +19,56 @@
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
   <script>
     // Створення карти
-    var map = L.map('map').setView([49.8, 24.0], 9);
+    var map = L.map('map').setView([50.35, 24.25], 11); // центр: Сокальщина
 
-    // Базові карти
+    // --- Базові карти ---
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 19,
-      attribution: 'Tiles © Esri'
-    });
+    var esri = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { maxZoom: 19, attribution: 'Tiles © Esri' }
+    );
 
-    // Додаткові WMS-шари (LiDAR/ортофото/архівні карти)
-    var lidar = L.tileLayer.wms("https://gis.lviv.ua/geoserver/wms", {
-      layers: 'lidar:dem',
-      format: 'image/png',
-      transparent: true,
-      attribution: "LiDAR Львів"
-    });
+    var hillshade = L.tileLayer(
+      'https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png',
+      { maxZoom: 17, attribution: 'EU DEM / SRTM Hillshade' }
+    );
 
-    var orto = L.tileLayer.wms("https://gis.lviv.ua/geoserver/wms", {
-      layers: 'ortophoto:latest',
-      format: 'image/png',
-      transparent: false,
-      attribution: "Ортофото Львів"
-    });
+    // --- Історичні карти ---
+    var wig = L.tileLayer(
+      'https://mapy.geoportal.gov.pl/wss/service/img/guest/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=TRUE&LAYERS=WMS_WIG100k&STYLES=&SRS=EPSG:3857&WIDTH=256&HEIGHT=256&BBOX={bbox-epsg-3857}',
+      { attribution: "WIG Maps 1920-30", maxZoom: 18 }
+    );
 
-    var austro = L.tileLayer.wms("https://mapywig.org/wms/wms.php", {
-      layers: 'mapywig100k',
-      format: 'image/png',
-      transparent: true,
-      attribution: "Австрійські карти"
-    });
+    var austro = L.tileLayer(
+      'https://mapy.geoportal.gov.pl/wss/service/img/guest/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=TRUE&LAYERS=WMS_Austrian&STYLES=&SRS=EPSG:3857&WIDTH=256&HEIGHT=256&BBOX={bbox-epsg-3857}',
+      { attribution: "Австрійські карти XIX ст.", maxZoom: 18 }
+    );
 
-    // Контроль шарів
+    // --- Контроль шарів ---
     var baseMaps = {
       "OpenStreetMap": osm,
-      "Esri Satellite": esri
+      "Esri Satellite": esri,
+      "Рельєф (Hillshade)": hillshade
     };
 
     var overlayMaps = {
-      "LiDAR DEM": lidar,
-      "Ортофото": orto,
-      "Австрійські карти": austro
+      "Карти WIG (1920-30)": wig,
+      "Австрійські карти XIX ст.": austro
     };
 
     L.control.layers(baseMaps, overlayMaps).addTo(map);
 
-    // Пошук по місцях
+    // --- Пошук ---
     var geocoder = L.Control.geocoder({
       defaultMarkGeocode: true,
       placeholder: "Пошук села чи дороги..."
     }).addTo(map);
 
-    // Визначення місця користувача
+    // --- Локація користувача ---
     map.locate({setView: false});
     function onLocationFound(e) {
       L.marker(e.latlng).addTo(map).bindPopup("Ви тут").openPopup();

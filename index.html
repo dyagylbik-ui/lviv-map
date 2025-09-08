@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Карта старих доріг Львівщина</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
+  <style>
+    body, html { margin:0; padding:0; height:100%; }
+    #map { width:100%; height:100%; }
+    .leaflet-control-layers-expanded { font-size:14px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <script>
+    // Створення карти
+    var map = L.map('map').setView([49.8, 24.0], 9);
+
+    // Базові карти
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles © Esri'
+    });
+
+    // Додаткові WMS-шари (LiDAR/ортофото/архівні карти)
+    var lidar = L.tileLayer.wms("https://gis.lviv.ua/geoserver/wms", {
+      layers: 'lidar:dem',
+      format: 'image/png',
+      transparent: true,
+      attribution: "LiDAR Львів"
+    });
+
+    var orto = L.tileLayer.wms("https://gis.lviv.ua/geoserver/wms", {
+      layers: 'ortophoto:latest',
+      format: 'image/png',
+      transparent: false,
+      attribution: "Ортофото Львів"
+    });
+
+    var austro = L.tileLayer.wms("https://mapywig.org/wms/wms.php", {
+      layers: 'mapywig100k',
+      format: 'image/png',
+      transparent: true,
+      attribution: "Австрійські карти"
+    });
+
+    // Контроль шарів
+    var baseMaps = {
+      "OpenStreetMap": osm,
+      "Esri Satellite": esri
+    };
+
+    var overlayMaps = {
+      "LiDAR DEM": lidar,
+      "Ортофото": orto,
+      "Австрійські карти": austro
+    };
+
+    L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+    // Пошук по місцях
+    var geocoder = L.Control.geocoder({
+      defaultMarkGeocode: true,
+      placeholder: "Пошук села чи дороги..."
+    }).addTo(map);
+
+    // Визначення місця користувача
+    map.locate({setView: false});
+    function onLocationFound(e) {
+      L.marker(e.latlng).addTo(map).bindPopup("Ви тут").openPopup();
+    }
+    map.on('locationfound', onLocationFound);
+  </script>
+</body>
+</html>
